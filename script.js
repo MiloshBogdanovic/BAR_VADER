@@ -133,91 +133,45 @@ function showNotification(message, type = 'info') {
     }, 5000);
 }
 
-// Intersection Observer for animations
-const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-};
-
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.style.opacity = '1';
-            entry.target.style.transform = 'translateY(0)';
-        }
-    });
-}, observerOptions);
-
-// Observe elements for animation
+// Consolidated DOMContentLoaded - all initialization in one place
 document.addEventListener('DOMContentLoaded', () => {
+    // Intersection Observer for animations
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    // Observe elements for animation
     const animatedElements = document.querySelectorAll('.menu-item, .feature, .contact-item');
-    
     animatedElements.forEach(el => {
         el.style.opacity = '0';
         el.style.transform = 'translateY(30px)';
         el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
         observer.observe(el);
     });
-});
 
-// Parallax effect for hero section
-window.addEventListener('scroll', () => {
-    const scrolled = window.pageYOffset;
-    const hero = document.querySelector('.hero');
-    const stars = document.querySelector('.stars');
-    
-    if (hero && stars) {
-        const rate = scrolled * -0.5;
-        stars.style.transform = `translateY(${rate}px)`;
-    }
-});
-
-// Dynamic typing effect for hero subtitle
-function typeWriter(element, text, speed = 100) {
-    let i = 0;
-    element.innerHTML = '';
-    
-    function type() {
-        if (i < text.length) {
-            element.innerHTML += text.charAt(i);
-            i++;
-            setTimeout(type, speed);
-        }
-    }
-    
-    type();
-}
-
-// Initialize typing effect when page loads
-document.addEventListener('DOMContentLoaded', () => {
-    const subtitle = document.querySelector('.hero-subtitle');
-    if (subtitle) {
-        const originalText = subtitle.textContent;
-        setTimeout(() => {
-            typeWriter(subtitle, originalText, 150);
-        }, 1000);
-    }
-});
-
-// Add hover effects to menu items
-document.addEventListener('DOMContentLoaded', () => {
+    // Add hover effects to menu items
     const menuItems = document.querySelectorAll('.menu-item');
-    
     menuItems.forEach(item => {
         item.addEventListener('mouseenter', () => {
             item.style.background = 'rgba(255, 255, 255, 0.05)';
         });
-        
         item.addEventListener('mouseleave', () => {
             item.style.background = 'transparent';
         });
     });
-});
 
-// Add click effect to buttons
-document.addEventListener('DOMContentLoaded', () => {
+    // Add click effect to buttons
     const buttons = document.querySelectorAll('.btn');
-    
     buttons.forEach(button => {
         button.addEventListener('click', function(e) {
             // Create ripple effect
@@ -249,6 +203,36 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 600);
         });
     });
+
+    // Form input animations
+    const inputs = document.querySelectorAll('input, select');
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.style.transform = 'scale(1.02)';
+        });
+        input.addEventListener('blur', function() {
+            this.parentElement.style.transform = 'scale(1)';
+        });
+    });
+
+    // Add accessibility improvements
+    buttons.forEach(button => {
+        if (!button.getAttribute('aria-label')) {
+            button.setAttribute('aria-label', button.textContent);
+        }
+    });
+    
+    // Add focus indicators
+    const focusableElements = document.querySelectorAll('a, button, input, select');
+    focusableElements.forEach(element => {
+        element.addEventListener('focus', function() {
+            this.style.outline = '2px solid #ffffff';
+            this.style.outlineOffset = '2px';
+        });
+        element.addEventListener('blur', function() {
+            this.style.outline = 'none';
+        });
+    });
 });
 
 // Add CSS for ripple animation
@@ -263,29 +247,16 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Form input animations
-document.addEventListener('DOMContentLoaded', () => {
-    const inputs = document.querySelectorAll('input, select');
+// Parallax effect for hero section
+window.addEventListener('scroll', () => {
+    const scrolled = window.pageYOffset;
+    const hero = document.querySelector('.hero');
+    const stars = document.querySelector('.stars');
     
-    inputs.forEach(input => {
-        input.addEventListener('focus', function() {
-            this.parentElement.style.transform = 'scale(1.02)';
-        });
-        
-        input.addEventListener('blur', function() {
-            this.parentElement.style.transform = 'scale(1)';
-        });
-    });
-});
-
-// Add loading animation
-window.addEventListener('load', () => {
-    document.body.style.opacity = '0';
-    document.body.style.transition = 'opacity 0.5s ease';
-    
-    setTimeout(() => {
-        document.body.style.opacity = '1';
-    }, 100);
+    if (hero && stars) {
+        const rate = scrolled * -0.5;
+        stars.style.transform = `translateY(${rate}px)`;
+    }
 });
 
 // Keyboard navigation support
@@ -303,58 +274,87 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// Add accessibility improvements
-document.addEventListener('DOMContentLoaded', () => {
-    // Add ARIA labels to interactive elements
-    const buttons = document.querySelectorAll('.btn');
-    buttons.forEach(button => {
-        if (!button.getAttribute('aria-label')) {
-            button.setAttribute('aria-label', button.textContent);
+// Video control - pause until 15 seconds (when BAR VADER appears)
+let videoInitialized = false;
+const pageLoadTime = Date.now();
+
+function initVideo() {
+    // Prevent multiple initializations
+    if (videoInitialized) {
+        return;
+    }
+
+    const heroVideo = document.getElementById('heroVideo');
+    
+    if (!heroVideo) {
+        // Retry if video isn't loaded yet (max 10 attempts)
+        let retries = 0;
+        const maxRetries = 10;
+        const retryInterval = setInterval(() => {
+            retries++;
+            const video = document.getElementById('heroVideo');
+            if (video || retries >= maxRetries) {
+                clearInterval(retryInterval);
+                if (video) {
+                    initVideo();
+                }
+            }
+        }, 100);
+        return;
+    }
+    
+    videoInitialized = true;
+    
+    // Remove autoplay and pause video on first frame
+    heroVideo.removeAttribute('autoplay');
+    heroVideo.currentTime = 0;
+    heroVideo.pause();
+    
+    // Function to ensure video stays paused
+    const pauseOnFirstFrame = () => {
+        if (Date.now() - pageLoadTime < 15000) {
+            heroVideo.currentTime = 0;
+            heroVideo.pause();
+        }
+    };
+    
+    // Pause video when it loads
+    heroVideo.addEventListener('loadedmetadata', pauseOnFirstFrame, { once: true });
+    heroVideo.addEventListener('loadeddata', pauseOnFirstFrame, { once: true });
+    heroVideo.addEventListener('canplay', pauseOnFirstFrame, { once: true });
+    
+    // Prevent video from playing before 15 seconds
+    heroVideo.addEventListener('play', function preventEarlyPlay(e) {
+        const timeSinceLoad = Date.now() - pageLoadTime;
+        if (timeSinceLoad < 15000) {
+            e.preventDefault();
+            heroVideo.pause();
+            heroVideo.currentTime = 0;
+        } else {
+            // Remove listener once we're past 15 seconds
+            heroVideo.removeEventListener('play', preventEarlyPlay);
         }
     });
     
-    // Add focus indicators
-    const focusableElements = document.querySelectorAll('a, button, input, select');
-    focusableElements.forEach(element => {
-        element.addEventListener('focus', function() {
-            this.style.outline = '2px solid #ffffff';
-            this.style.outlineOffset = '2px';
+    // Start video after 15 seconds (when crawl finishes and BAR VADER appears)
+    setTimeout(() => {
+        heroVideo.play().catch(error => {
+            console.log('Video play error:', error);
+            // Retry play after a short delay
+            setTimeout(() => heroVideo.play(), 500);
         });
-        
-        element.addEventListener('blur', function() {
-            this.style.outline = 'none';
-        });
-    });
-});
-
-// Video pause on first frame
-document.addEventListener('DOMContentLoaded', () => {
-    const heroVideo = document.getElementById('heroVideo');
+    }, 15000);
     
-    if (heroVideo) {
-        // Remove autoplay initially
-        heroVideo.removeAttribute('autoplay');
-        
-        // When video is loaded, pause it on first frame
-        heroVideo.addEventListener('loadeddata', () => {
-            heroVideo.currentTime = 0;
-            heroVideo.pause();
-            
-            // After 2 seconds, start playing
-            setTimeout(() => {
-                heroVideo.play();
-            }, 2000);
-        });
-        
-        // Handle video loop - pause on first frame again
-        heroVideo.addEventListener('ended', () => {
-            heroVideo.currentTime = 0;
-            heroVideo.pause();
-            
-            // After 2 seconds, start playing again
-            setTimeout(() => {
-                heroVideo.play();
-            }, 2000);
-        });
-    }
-});
+    // Handle video loop
+    heroVideo.addEventListener('ended', () => {
+        heroVideo.currentTime = 0;
+        heroVideo.play();
+    }, { once: false });
+}
+
+// Initialize video when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initVideo);
+} else {
+    initVideo();
+}
