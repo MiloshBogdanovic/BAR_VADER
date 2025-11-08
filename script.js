@@ -40,16 +40,30 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Menu Tab Functionality
+let menuTabsInitialized = false;
+
 function initMenuTabs() {
+    // Prevent double initialization
+    if (menuTabsInitialized) {
+        return;
+    }
+    
     const menuTabs = document.querySelectorAll('.menu-tab');
 
-    if (menuTabs.length === 0) {
+    if (!menuTabs || menuTabs.length === 0) {
         console.log('Menu tabs not found');
         return;
     }
 
-    menuTabs.forEach(tab => {
-        tab.addEventListener('click', function(e) {
+    // Convert NodeList to Array for safer iteration
+    Array.from(menuTabs).forEach((tab, index) => {
+        if (!tab) {
+            console.warn('Null tab element found at index:', index);
+            return;
+        }
+        
+        try {
+            tab.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             
@@ -97,14 +111,21 @@ function initMenuTabs() {
                 }
             }
         });
+        } catch (error) {
+            console.error('Error adding event listener to tab:', error, tab);
+        }
     });
+    
+    menuTabsInitialized = true;
+    console.log('Menu tabs initialized successfully');
 }
 
-// Initialize menu tabs when DOM is ready
+// Initialize menu tabs when DOM is ready - always wait for DOMContentLoaded
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initMenuTabs);
 } else {
-    initMenuTabs();
+    // DOM already loaded, but wait a tick to ensure everything is ready
+    setTimeout(initMenuTabs, 0);
 }
 
 // Navbar scroll effect
