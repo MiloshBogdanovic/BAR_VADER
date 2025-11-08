@@ -28,23 +28,72 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 });
 
 // Menu Tab Functionality
-const menuTabs = document.querySelectorAll('.menu-tab');
-const menuCategories = document.querySelectorAll('.menu-category');
+function initMenuTabs() {
+    const menuTabs = document.querySelectorAll('.menu-tab');
 
-menuTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-        // Remove active class from all tabs and categories
-        menuTabs.forEach(t => t.classList.remove('active'));
-        menuCategories.forEach(c => c.classList.remove('active'));
-        
-        // Add active class to clicked tab
-        tab.classList.add('active');
-        
-        // Show corresponding category
-        const category = tab.getAttribute('data-category');
-        document.getElementById(category).classList.add('active');
+    if (menuTabs.length === 0) {
+        console.log('Menu tabs not found');
+        return;
+    }
+
+    menuTabs.forEach(tab => {
+        tab.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Get the category ID from the clicked tab
+            const categoryId = this.getAttribute('data-category');
+            console.log('Tab clicked, category:', categoryId);
+            
+            // Get fresh references to all tabs and categories
+            const allTabs = document.querySelectorAll('.menu-tab');
+            const allCategories = document.querySelectorAll('.menu-category');
+            
+            console.log('Found tabs:', allTabs.length, 'Found categories:', allCategories.length);
+            
+            // Remove active class from all tabs
+            allTabs.forEach(t => {
+                t.classList.remove('active');
+            });
+            
+            // Remove active class from all categories (CSS will hide them)
+            allCategories.forEach(c => {
+                c.classList.remove('active');
+            });
+            
+            // Add active class to clicked tab
+            this.classList.add('active');
+            
+            // Find and show the corresponding category
+            const categoryElement = document.getElementById(categoryId);
+            
+            if (categoryElement) {
+                console.log('Found category element:', categoryId);
+                // Add active class - CSS will show it
+                categoryElement.classList.add('active');
+                
+                // Force a reflow to ensure CSS is applied
+                categoryElement.offsetHeight;
+            } else {
+                console.error('Category element not found:', categoryId);
+                // Try alternative selector
+                const altElement = document.querySelector(`#${categoryId}.menu-category`);
+                if (altElement) {
+                    console.log('Found by alternative selector');
+                    altElement.classList.add('active');
+                    altElement.offsetHeight;
+                }
+            }
+        });
     });
-});
+}
+
+// Initialize menu tabs when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMenuTabs);
+} else {
+    initMenuTabs();
+}
 
 // Navbar scroll effect
 window.addEventListener('scroll', () => {
@@ -54,35 +103,6 @@ window.addEventListener('scroll', () => {
     } else {
         navbar.style.background = 'rgba(0, 0, 0, 0.95)';
     }
-});
-
-// Reservation Form Handling
-const reservationForm = document.getElementById('reservation-form');
-
-reservationForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    
-    // Get form data
-    const formData = new FormData(reservationForm);
-    const reservationData = {
-        name: formData.get('name'),
-        email: formData.get('email'),
-        phone: formData.get('phone'),
-        date: formData.get('date'),
-        time: formData.get('time'),
-        guests: formData.get('guests')
-    };
-    
-    // Simple validation
-    if (!reservationData.name || !reservationData.email || !reservationData.phone || 
-        !reservationData.date || !reservationData.time || !reservationData.guests) {
-        showNotification('Please fill in all fields', 'error');
-        return;
-    }
-    
-    // Simulate reservation submission
-    showNotification('Reservation submitted! We will contact you soon.', 'success');
-    reservationForm.reset();
 });
 
 // Notification System
@@ -274,6 +294,126 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+// Skip animation on click
+let animationSkipped = false;
+
+function skipAnimation() {
+    if (animationSkipped) return;
+    animationSkipped = true;
+
+    // Hide Star Wars crawl
+    const heroDescription = document.querySelector('.hero-description');
+    if (heroDescription) {
+        heroDescription.style.opacity = '0';
+        heroDescription.style.visibility = 'hidden';
+    }
+
+    // Show BAR VADER text immediately
+    const heroText = document.querySelector('.hero-text');
+    if (heroText) {
+        heroText.style.opacity = '1';
+        heroText.style.transform = 'translateY(0)';
+        heroText.style.animation = 'none';
+    }
+
+    // Show subtitle immediately
+    const heroSubtitle = document.querySelector('.hero-subtitle');
+    if (heroSubtitle) {
+        heroSubtitle.style.opacity = '1';
+        heroSubtitle.style.transform = 'translateY(0)';
+        heroSubtitle.style.animation = 'none';
+    }
+
+    // Show buttons immediately
+    const heroButtons = document.querySelector('.hero-buttons');
+    if (heroButtons) {
+        heroButtons.style.opacity = '1';
+        heroButtons.style.transform = 'translateY(0)';
+        heroButtons.style.animation = 'none';
+    }
+
+    // Show nav text immediately
+    const navLogoText = document.querySelector('.nav-logo span');
+    if (navLogoText) {
+        navLogoText.style.opacity = '1';
+        navLogoText.style.transform = 'translateY(0)';
+        navLogoText.style.animation = 'none';
+    }
+
+    // Show video background immediately
+    const heroVideoContainer = document.querySelector('.hero-video');
+    if (heroVideoContainer) {
+        heroVideoContainer.style.opacity = '1';
+        heroVideoContainer.style.animation = 'none';
+    }
+
+    // Start video immediately
+    const heroVideo = document.getElementById('heroVideo');
+    if (heroVideo) {
+        heroVideo.play().catch(error => {
+            console.log('Video play error:', error);
+            setTimeout(() => heroVideo.play(), 500);
+        });
+    }
+}
+
+// Add click handler to hero section to skip animation
+document.addEventListener('DOMContentLoaded', () => {
+    const heroSection = document.querySelector('.hero');
+    if (heroSection) {
+        heroSection.style.cursor = 'pointer';
+        
+        // Add visual hint that it's clickable
+        const skipHint = document.createElement('div');
+        skipHint.textContent = 'Click to skip intro';
+        skipHint.style.cssText = `
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            z-index: 10;
+            pointer-events: none;
+            animation: fadeInOut 3s ease-in-out infinite;
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeInOut {
+                0%, 100% { opacity: 0.3; }
+                50% { opacity: 0.8; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        heroSection.appendChild(skipHint);
+        
+        // Hide hint after 10 seconds
+        setTimeout(() => {
+            if (skipHint.parentNode) {
+                skipHint.style.transition = 'opacity 1s ease';
+                skipHint.style.opacity = '0';
+                setTimeout(() => {
+                    if (skipHint.parentNode) {
+                        skipHint.remove();
+                    }
+                }, 1000);
+            }
+        }, 10000);
+        
+        // Single click handler for skipping animation
+        heroSection.addEventListener('click', () => {
+            if (skipHint.parentNode) {
+                skipHint.remove();
+            }
+            skipAnimation();
+        });
+    }
+});
+
 // Video control - pause until 15 seconds (when BAR VADER appears)
 let videoInitialized = false;
 const pageLoadTime = Date.now();
@@ -312,7 +452,7 @@ function initVideo() {
     
     // Function to ensure video stays paused
     const pauseOnFirstFrame = () => {
-        if (Date.now() - pageLoadTime < 15000) {
+        if (!animationSkipped && Date.now() - pageLoadTime < 15000) {
             heroVideo.currentTime = 0;
             heroVideo.pause();
         }
@@ -323,8 +463,12 @@ function initVideo() {
     heroVideo.addEventListener('loadeddata', pauseOnFirstFrame, { once: true });
     heroVideo.addEventListener('canplay', pauseOnFirstFrame, { once: true });
     
-    // Prevent video from playing before 15 seconds
+    // Prevent video from playing before 15 seconds (unless animation was skipped)
     heroVideo.addEventListener('play', function preventEarlyPlay(e) {
+        if (animationSkipped) {
+            heroVideo.removeEventListener('play', preventEarlyPlay);
+            return;
+        }
         const timeSinceLoad = Date.now() - pageLoadTime;
         if (timeSinceLoad < 15000) {
             e.preventDefault();
